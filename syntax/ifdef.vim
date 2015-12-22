@@ -1,10 +1,11 @@
 " Description: C Preprocessor Highlighting
 " Language: Preprocessor on top of c, cpp, idl syntax
-" Author: Michael Geddes <vimmer@frog.wheelycreek.net>
-" Modified: July 2011
-" Version: 3.2
+" Previous Maintainer List:
+"               Michael Geddes <vimmer@frog.wheelycreek.net>
+" Maintainer:   Prachya Saechua <blackb1rd@blackb1rd.me>
+" Modified: December 2015
 "
-" Copyright 2002-2011 Michael Geddes
+" Copyright 2002-2015 Michael Geddes, Prachya Saechua
 " Please feel free to use, modify & distribute all or part of this script,
 " providing this copyright message remains.
 " I would appreciate being acknowledged in any derived scripts, and would
@@ -21,10 +22,6 @@
 "   * Firstly, the current directory, and all higher directories are search for
 "     the file specified in g:ifdef_filename - which defaults to '.defines'
 "     (first one found gets used)
-"   * Secondly, modelines prefixed by 'vim_ifdef:' are searched for within the
-"     current file being loaded.  You can either use the vim default settings
-"     for modeline/modelines, or these can be overridden by using
-"     ifdef_modeline and ifdef_modelines.
 " The defines/undefines are addeded in order.  Lines must be prefixed with
 " 'defined=' or 'undefined=' and contain a ';' or ',' separated list of keywords.
 " Keywords may be regular expressions, though use of '\k' rather than '.' is
@@ -40,22 +37,12 @@
 " will be highlighted as 'Special', you may wish to hilight it as an error. >
 "   hi link ifdefElseEndifInBracketError Error
 "
-" NB: On 16bit and win32s windows builds, the default for ifdef_filename is
-" '_defines'.  I've assumed that win32 apps can handle '.defines'.
-"
 " Examples:
 " ----.defines-------
 " undefined=*
 " defined=WIN32;__MT
 " ----.defines----------
 " undefined=DEBUG,DBG
-" ----(modelines) samples.cpp-------
-" /* vim_ifdef: defined=WIN32 */
-" // vim_ifdef: undefine=DBG
-"
-" Settings:
-" g:ifdef_modeline overrides &modeline for whether to use the ifdef modelines.
-" g:ifdef_modelines overrides &modelines for how many lines to look at.
 "
 " Hilighting:
 " ifdefIfZero (default Comment)                     - Inside #if 0 highlighting
@@ -71,63 +58,6 @@
 " Use :Define <keyword> or function Define(keyword) to mark a preprocessor symbol as being defined.
 " Use  :Undefine <keyword> or function Undefine(keyword) to mark a preprocessor symbol as not being defined.
 " call Undefine('\k\+') will mark all words that aren't explicitly 'defined' as undefined.
-"
-" History:
-" 3.2
-"  - Fix by Dr. Chip for C comment at endof ifdef continuing over line.
-" 3.1
-"  - Wu Hong fixed bug in Undefine()
-"  - Stop errors in script due to undefined hl being cleared.
-"  - Added :Define, :Undefine with completion
-" 3.0
-"   - Renamed everything to be more clear, and reversed some of the include
-"   groups from exclude groups - make use of ALL in groups. This seems to have
-"   fixed most bugs, but may have reintroduced some as well, however doing it
-"   this way round should prevent most interaction with other scripts.
-"   KNOWN issues: Comments at the end of #ifndef, #else don't always highlight.
-"   - Actually clear the cPreCondit highlight group as we are taking it over.
-"     Ditto cCppOut (#if 0) handling
-" 2.4
-"   - Prevent interaction with c brackets (Picked up by Dany St-Amant)
-" 2.3
-"   - Clean up some of the comments
-"   - Ignore whitespace in .defines files. (TODO: Credit person who suggested this!)
-"   - Add comments for highlighting groups.
-" 2.2
-"   - Add support for idl files.
-"   - Suggestions from
-"     - Check for 'shell' type and 'shellslash'
-"     - Don't use has("windows"), which is different.
-" 2.1
-"   - Fixes from Erik Remmelzwaal
-"     - Need to use %:p:h instead of %:h to get directory
-"     - Documentation fixes/updates
-"     - Added ability to parse ',' or ';' separated lists instead of fixing
-"       the documentation ;)
-" 2.0:
-"   - Added loading of ifdefs
-"     - via ifdef modelines
-"     - via .defines files
-"   - Added missing highlight link.. relinked ifdefed out comments to special
-"   - Conditional loading of functions
-" 1.3:
-"   - Fix some group names
-" 1.2:
-"   - Fix some errors in the tidy-up with group names
-"   - Make it a propper syntax file - to be added onto c.vim / cpp.vim
-"   - Use standard highlight groups - PreProc, Comment and Debug
-"   - Use 'default' highlight syntax.
-" 1.1:
-"   - Tidy-up
-"   - Make sure CIfDef gets called.
-"   - Turn of #if 0 properly - this script handles it!
-"   - prefix 'ifdef' to all groups
-"   - Use some c 'clusters' to get rid of some inhouse code
-"
-"   TODO: (Feel free to contact me with suggestions)
-"     - Allow defined= and undefined= on the same line in modelines.
-"
-
 "
 if exists('b:current_syntax') && b:current_syntax =~ 'ifdef'
   finish
@@ -253,37 +183,6 @@ fun! Undefine(define)
 
 endfun
 
-" Find the modelines for vim_ifdef between l1 and l2.
-fun! s:GetModelines( l1, l2)
-  if a:l1==0 | return ''| endif
-  let c=a:l1
-  let lines=''
-  let reA='\<vim_ifdef:'
-  let reB='\<vim_ifdef:\s*\zs\(.\{-}\)\ze\s*\(\*/\s*\)\=$'
-  while c <= a:l2
-    let l=getline(c)
-    if l =~reA
-      let lines=lines.matchstr(l,reB)."\n"
-    endif
-    let c=c+1
-  endwhile
-  return lines
-endfun
-
-" Return the modelines based on the settings.
-fun! s:ReadDefineModeline()
-  " Check for modeline=enable/disable
-  if (exists('g:ifdef_modeline') ? (g:ifdef_modeline==0):(!&modeline)) | return | endif
-  let defmodelines= (exists('g:ifdef_modelines')?(g:ifdef_modelines):(&modelines))
-  if ((2*defmodelines)>=line('$'))
-    " Check whole file
-    return s:GetModelines( 1,line('$'))
-  else
-    " Check top & bottom
-    return s:GetModelines( 1,defmodelines).s:GetModelines(line('$')-defmodelines,line('$'))
-  endif
-endfun
-
 " Check a directory for the specified file
 function! s:CheckDirForFile(directory,file)
   let aborted=0
@@ -340,7 +239,7 @@ endfun
 fun! IfdefLoad()
   let txt=s:ReadFile(expand('%:p:h'),g:ifdef_filename)
   if txt!='' && txt !~"[\r\n]$" | let txt=txt."\n" | endif
-  let txt=txt.s:ReadDefineModeline()
+  let txt=txt
   let reCr="[^\n\r]*[\r\n]*"
   let reDef='^\s*\(un\)\=defined\=\s*=\s*'
   let back=strlen(txt)
