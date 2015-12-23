@@ -1,9 +1,9 @@
-" Description: C Preprocessor Highlighting
-" Language: Preprocessor on top of c, cpp, idl syntax
+" Description:  C Preprocessor Highlighting
+" Language:     Preprocessor on top of c, cpp, idl syntax
 " Previous Maintainer List:
 "               Michael Geddes <vimmer@frog.wheelycreek.net>
 " Maintainer:   Prachya Saechua <blackb1rd@blackb1rd.me>
-" Modified: December 2015
+" Modified:     December 2015
 "
 " Copyright 2002-2015 Michael Geddes, Prachya Saechua
 " Please feel free to use, modify & distribute all or part of this script,
@@ -11,54 +11,6 @@
 " I would appreciate being acknowledged in any derived scripts, and would
 " appreciate and welcome any updates, modifications or suggestions.
 
-" Usage:
-" Use as a syntax plugin (source ifdef.vim from ~/vimfiles/after/syntax/cpp.vim -
-" also c.vim and idl.vim )
-"
-" #ifdef defintions are considered to be in 1 of 3 states, defined, not-defined
-" or don't know (the default).
-"
-" To specify which defines are valid/invalid, the scripts searches two places.
-"   * Firstly, the current directory, and all higher directories are search for
-"     the file specified in g:ifdef_filename - which defaults to '.defines'
-"     (first one found gets used)
-" The defines/undefines are addeded in order.  Lines must be prefixed with
-" 'defined=' or 'undefined=' and contain a ';' or ',' separated list of keywords.
-" Keywords may be regular expressions, though use of '\k' rather than '.' is
-" highly recommended.
-"
-" Specifying '*' by itself equates to '\k\+' and allows
-" setting of the default to be defined/undefined.
-" Caveat:
-" Don't expect an #else/#endif inside an open bracket '(' to match the #ifdef
-" correctly.  This is almost impossible to do without messing up the error-in
-" bracket code.
-" Currently #else/#endif that are inside brackets where the #ifdef is outside
-" will be highlighted as 'Special', you may wish to hilight it as an error. >
-"   hi link ifdefElseEndifInBracketError Error
-"
-" Examples:
-" ----.defines-------
-" undefined=*
-" defined=WIN32;__MT
-" ----.defines----------
-" undefined=DEBUG,DBG
-"
-" Hilighting:
-" ifdefIfZero (default Comment)                     - Inside #if 0 highlighting
-" ifdefUndefined (default Debug)                    - The #ifdef/#else/#endif/#elseif
-" ifdefNeutralDefine (default PreCondit)            - Other defines where the defines are valid
-" ifdefInBadPreCondit (default PreCondit)           - The #ifdef/#else/#endif/#elseif in an invalid section.
-" ifdefInUndefinedComment (default ifdefUndefined)  - A C/C++ comment inside a an invalid section
-" ifdefPreCondit1 (defualt PreCondit)               - The #ifdef/#else/#endif/#elseif in a valid section
-" ifdefElseEndifInBracketError (default Special)    - Usupported #else/#endif inside a bracket '('.
-" ------------------------------
-" Alternate (old) usage.
-" Call CIfDef() after sourcing the c/cpp syntax file.
-" Use :Define <keyword> or function Define(keyword) to mark a preprocessor symbol as being defined.
-" Use  :Undefine <keyword> or function Undefine(keyword) to mark a preprocessor symbol as not being defined.
-" call Undefine('\k\+') will mark all words that aren't explicitly 'defined' as undefined.
-"
 if exists('b:current_syntax') && b:current_syntax =~ 'ifdef'
   finish
 endif
@@ -95,12 +47,8 @@ else
   finish
 endif
 
-if !exists('ifdef_filename')
-  if has('dos16') || has('gui_win32s') || has('win16')
-    let ifdef_filename='_defines'
-  else
-    let ifdef_filename='.defines'
-  endif
+if !exists('ifdeftags')
+  let ifdeftags='.defines'
 endif
 
 " Reload CIfDef - backwards compatible
@@ -205,7 +153,6 @@ endfun
 fun! s:ReadFile( dir, filename)
   let realdir= s:CheckDirForFile( a:dir, a:filename )
   if realdir=='' | return '' | endif
-  " if has('dos16') || has('gui_win32s') || has('win16') || ha
   if !has('unix') && !&shellslash && &shell !~ 'sh[a-z.]*$'
     return system('type "'.fnamemodify(realdir,':gs?/?\\?.').a:filename.'"')
   else
@@ -237,7 +184,7 @@ endfun
 
 " Load ifdefs for a file
 fun! IfdefLoad()
-  let txt=s:ReadFile(expand('%:p:h'),g:ifdef_filename)
+  let txt=s:ReadFile(expand('%:p:h'),g:ifdeftags)
   if txt!='' && txt !~"[\r\n]$" | let txt=txt."\n" | endif
   let txt=txt
   let reCr="[^\n\r]*[\r\n]*"

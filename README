@@ -1,8 +1,0 @@
-This is a mirror of http://www.vim.org/scripts/script.php?script_id=7
-
-Provides highlighting for  #ifdef  #ifndef  #else  #endif  blocks, with the ability to mark a symbol as defined or undefined.
-Handles nesting of #ifdefs (and #if) as well, but does not handle  #if defined().
-
-Supports vim_ifdef:  .defines files to specify defined/undefined symbols.
-
-use :Define <keyword>  or  :Undefine <keyword>     to dynamically specify defined or undefined sections.
