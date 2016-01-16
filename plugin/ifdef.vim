@@ -21,7 +21,6 @@ else
   let b:current_syntax = b:current_syntax.'+ifdef'
 endif
 
-
 " Settings for the c.vim highlighting .. disable the default preprocessor handling.
 let c_no_if0=1
 if hlexists('cPreCondit')
